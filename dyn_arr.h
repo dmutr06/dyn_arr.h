@@ -1,0 +1,66 @@
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifndef DYN_ARR_H_
+#define DYN_ARR_H_
+
+static const size_t INIT_CAP = 16;
+
+static void default_deinit(void *item) {}
+
+#define DynArr(type...) \
+  struct { \
+    size_t size; \
+    size_t cap; \
+    type *items; \
+    void (*deinit_item)(type *item); \
+  }
+
+#define darr_init(type, deinit) { \
+    .cap = INIT_CAP, \
+    .size = 0, \
+    .items = malloc(INIT_CAP * sizeof(type)), \
+    .deinit_item = deinit ? deinit : (void (*)(type *)) default_deinit \
+}
+
+#define darr_push(arr, item...) { \
+  if ((arr)->size >= (arr)->cap) { \
+    (arr)->cap *= 2; \
+    (arr)->items = realloc((arr)->items, (arr)->cap * sizeof(*(arr)->items)); \
+  } \
+  (arr)->items[(arr)->size++] = item; \
+} (arr)->size
+
+#define darr_get(arr, idx...) (((arr)->size > (idx) || (idx) < 0) ? ((arr)->items + (idx)) : NULL)
+
+#define darr_deinit(arr) do { \
+  if ((void (*)(void *))(arr)->deinit_item != default_deinit) \
+    darr_foreach(arr, item) (arr)->deinit_item(item); \
+  free((arr)->items); \
+} while (0) \
+
+#define darr_pop(arr) do { \
+  if ((arr)->size <= 0) break; \
+  (arr)->deinit_item((arr)->items + --(arr)->size); \
+} while (0); (arr)->size 
+
+#define darr_remove(arr, idx...) do { \
+  if ((idx) < 0) break; \
+  if ((idx) == (arr)->size - 1) { \
+    darr_pop(arr); \
+    break; \
+  } \
+  if ((idx) >= (arr)->size) break; \
+  (arr)->deinit_item((arr)->items + (idx)); \
+  memmove((arr)->items + (idx), (arr)->items + (idx) + 1, (--(arr)->size - (idx)) * sizeof(*(arr)->items)); \
+} while (0); (arr)->size
+
+#define darr_first(arr) darr_get(arr, 0)
+
+#define darr_last(arr) darr_get(arr, (arr)->size - 1)
+
+#define darr_foreach(arr, item) \
+  for (typeof(*((arr)->items)) *item = (arr)->items; item < (arr)->items + (arr)->size; item++)
+
+#endif // DYN_ARR_H_
