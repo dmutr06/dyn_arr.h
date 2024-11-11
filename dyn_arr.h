@@ -7,7 +7,7 @@
 
 static const size_t INIT_CAP = 16;
 
-static void default_deinit(void *item) {}
+static void __darr_default_deinit(void *item) {}
 
 #define DynArr(type...) \
   struct { \
@@ -21,7 +21,7 @@ static void default_deinit(void *item) {}
     .cap = INIT_CAP, \
     .size = 0, \
     .items = malloc(INIT_CAP * sizeof(type)), \
-    .deinit_item = deinit ? deinit : (void (*)(type *)) default_deinit \
+    .deinit_item = deinit ? deinit : (void (*)(type *)) __darr_default_deinit \
 }
 
 #define darr_push(arr, item...) { \
@@ -35,7 +35,7 @@ static void default_deinit(void *item) {}
 #define darr_get(arr, idx...) (((arr)->size > (idx) || (idx) < 0) ? ((arr)->items + (idx)) : NULL)
 
 #define darr_deinit(arr) do { \
-  if ((void (*)(void *))(arr)->deinit_item != default_deinit) \
+  if ((void (*)(void *))(arr)->deinit_item != __darr_default_deinit) \
     darr_foreach(arr, item) (arr)->deinit_item(item); \
   free((arr)->items); \
 } while (0) \
