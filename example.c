@@ -26,7 +26,7 @@ void print_arr(PointArr *arr) {
 }
 
 int main() {
-  PointArr arr = darr_init(Point, deinit_point);
+  PointArr arr = darr_init(Point, NULL);
   darr_push(&arr, (Point) { 2.5, 2.5 });
   darr_push(&arr, (Point) { 3, 1.0 });
   darr_push(&arr, (Point) { 0.0, 0.5 });
